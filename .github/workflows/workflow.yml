@@ -46,11 +46,12 @@ jobs:
           name: python-package-distributions
           path: dist/
       - name: Install distribution from the local package
-        run: >-
+        run: |
+          find ./dist -type f -name '*.whl'
           pip install $(find ./dist -type f -name '*.whl')
           pip list | grep "${{ github.event.repository.name }}"
       - name: Run test script
-        run: >-
+        run: |
           python3 tests/main.py
   
 
