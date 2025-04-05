@@ -1,0 +1,14 @@
+# OS-specific files
+.DS_Store
+
+# IDE-specific files
+.idea/
+
+# Python-specific files
+__pycache__/
+build/
+dist/
+*.egg-info/
+
+# app-specific files
+output/
