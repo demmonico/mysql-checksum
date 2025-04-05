@@ -40,6 +40,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Download all the dists
         uses: actions/download-artifact@v4
         with:
@@ -52,6 +55,8 @@ jobs:
       - name: Run test script
         run: |
           pwd
+          ls -al
+          cd ..
           ls -al
           python3 tests/main.py
   
