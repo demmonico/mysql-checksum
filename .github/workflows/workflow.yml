@@ -60,7 +60,7 @@ jobs:
   publish-to-testpypi:
     name: Publish Python distribution to TestPyPI
     needs:
-      - build
+      - local-test
     runs-on: ubuntu-latest
 
     environment:
