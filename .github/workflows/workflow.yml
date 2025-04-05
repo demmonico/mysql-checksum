@@ -8,7 +8,7 @@ permissions: read-all
 
 jobs:
   build:
-    name: Build distribution
+    name: Build
     runs-on: ubuntu-latest
 
     steps:
@@ -34,7 +34,7 @@ jobs:
           path: dist/
 
   local-test:
-    name: Test Python distribution locally
+    name: Test locally
     needs:
       - build
     runs-on: ubuntu-latest
@@ -48,10 +48,13 @@ jobs:
       - name: Install distribution from the local package
         run: |
           find ./dist -type f -name '*.whl'
+          echo "1"
           echo "${{ github.event.repository.name }}"
+          echo "2"
           echo "${{ github.event.repository.name }}" | grep "${{ github.event.repository.name }}"
           pip install $(find ./dist -type f -name '*.whl')
-          pip list | grep "${{ github.event.repository.name }}"
+          pip list
+#          pip list | grep "$( echo "${{ github.event.repository.name }}" | grep -oE '[^/]+$' )"
       - name: Run test script
         run: |
           python3 tests/main.py
@@ -60,7 +63,7 @@ jobs:
   # Publish to TestPyPI on master pushes
 
   publish-to-testpypi:
-    name: Publish Python distribution to TestPyPI
+    name: Publish to TestPyPI
     needs:
       - local-test
     runs-on: ubuntu-latest
@@ -88,7 +91,7 @@ jobs:
   # Publish to PyPI only on tag pushes
 
   publish-to-pypi:
-    name: Publish Python distribution to PyPI
+    name: Publish to PyPI
 
     if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
     needs:
@@ -113,8 +116,7 @@ jobs:
 
   github-release:
     name: >-
-      Sign the Python distribution with Sigstore
-      and upload them to GitHub Release
+      Sign and upload to GitHub Release
     needs:
       - publish-to-pypi
     runs-on: ubuntu-latest
