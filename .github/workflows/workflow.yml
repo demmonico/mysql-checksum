@@ -48,6 +48,8 @@ jobs:
       - name: Install distribution from the local package
         run: |
           find ./dist -type f -name '*.whl'
+          echo "${{ github.event.repository.name }}"
+          echo "${{ github.event.repository.name }}" | grep "${{ github.event.repository.name }}"
           pip install $(find ./dist -type f -name '*.whl')
           pip list | grep "${{ github.event.repository.name }}"
       - name: Run test script
