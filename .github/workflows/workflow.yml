@@ -47,16 +47,12 @@ jobs:
           path: dist/
       - name: Install distribution from the local package
         run: |
-          find ./dist -type f -name '*.whl'
-          echo "1"
-          echo "${{ github.event.repository.name }}"
-          echo "2"
-          echo "${{ github.event.repository.name }}" | grep "${{ github.event.repository.name }}"
           pip install $(find ./dist -type f -name '*.whl')
-          pip list
-#          pip list | grep "$( echo "${{ github.event.repository.name }}" | grep -oE '[^/]+$' )"
+          pip list | grep "$( echo "${{ github.event.repository.name }}" | tr '-' '_' )"
       - name: Run test script
         run: |
+          pwd
+          ls -al
           python3 tests/main.py
   
 
@@ -115,8 +111,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
 
   github-release:
-    name: >-
-      Sign and upload to GitHub Release
+    name: Upload to GitHub Release
     needs:
       - publish-to-pypi
     runs-on: ubuntu-latest
