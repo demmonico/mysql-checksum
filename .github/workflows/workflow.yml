@@ -56,8 +56,7 @@ jobs:
         run: |
           pwd
           ls -al
-          cd ..
-          ls -al
+          ls -al tests/
           python3 tests/main.py
   
 
