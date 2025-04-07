@@ -22,3 +22,16 @@ Run the script with the following command:
 ```bash
 mysql-checksum <database_name> <user> <password> <host> <port>
 ```
+
+## Maintenance
+
+### Bump Version
+
+Using [bumpversion](https://pypi.org/project/bumpversion/) to bump the version of the package.
+
+```bash
+# Install bumpversion if not already installed
+pip install --upgrade bumpversion
+# Bump the version
+bumpversion major setup.py
+```
