@@ -8,6 +8,8 @@ permissions: read-all
 
 env:
   APP_PACKAGE_NAME: ${{ github.event.repository.name }}
+  REPO_URL: https://pypi.org
+  TEST_REPO_URL: https://test.pypi.org
 
 jobs:
 
@@ -75,87 +77,6 @@ jobs:
           python3 tests/main.py | grep "Hello from"
   
 
-#  publishTestpypiCheck:
-#    name: Prep to publish to TestPyPI
-#    needs:
-#      - pre
-#      - localTest
-#    runs-on: ubuntu-latest
-#    env:
-#      APP_PACKAGE_PREFIX: ${{ needs.pre.outputs.APP_PACKAGE_PREFIX }}
-#
-#    steps:
-#      - uses: actions/checkout@v4
-#      - name: Download all the dists
-#        uses: actions/download-artifact@v4
-#        with:
-#          name: python-package-distributions
-#          path: dist/
-#      - name: Version check
-#        id: version_check
-#        uses: ./.github/actions/publish-pypi-version-check
-#        with:
-#          is-test-pypi-repo: 'true'
-#
-#    outputs:
-#      APP_PACKAGE_EXISTS: ${{ steps.version_check.outputs.exists }}
-#
-#
-#  publishTestpypi:
-#    name: Publish to TestPyPI
-#
-#    needs:
-#      - publishTestpypiCheck
-#    if: needs.publishTestpypiCheck.outputs.APP_PACKAGE_EXISTS == 'false'  # only publish to TestPyPI if the package version does not exist
-#    runs-on: ubuntu-latest
-#
-#    environment:
-#      name: testpypi
-#      url: https://test.pypi.org/p/${{ env.APP_PACKAGE_NAME }}
-#
-#    permissions:
-#      id-token: write  # IMPORTANT: mandatory for trusted publishing
-#
-#    steps:
-#      - name: Download all the dists
-#        uses: actions/download-artifact@v4
-#        with:
-#          name: python-package-distributions
-#          path: dist/
-#      - name: Publish distribution to TestPyPI
-#        uses: pypa/gh-action-pypi-publish@release/v1
-#        with:
-#          repository-url: https://test.pypi.org/legacy/
-#          verbose: true
-
-#  publishTestpypi:
-#    name: Publish to TestPyPI
-#    needs:
-#      - pre
-#      - localTest
-#    runs-on: ubuntu-latest
-#    env:
-#      APP_PACKAGE_PREFIX: ${{ needs.pre.outputs.APP_PACKAGE_PREFIX }}
-#
-#    environment:
-#      name: testpypi
-#      url: https://test.pypi.org/p/${{ env.APP_PACKAGE_NAME }}
-#
-#    permissions:
-#      id-token: write  # IMPORTANT: mandatory for trusted publishing
-#
-#    steps:
-#      - uses: actions/checkout@v4
-#      - name: Download all the dists
-#        uses: actions/download-artifact@v4
-#        with:
-#          name: python-package-distributions
-#          path: dist/
-#      - name: Publish distribution
-#        uses: ./.github/actions/publish-pypi
-#        with:
-#          is-test-upload: 'true'
-
   publishTestpypi:
     name: Publish to TestPyPI
     needs:
@@ -167,7 +88,7 @@ jobs:
 
     environment:
       name: testpypi
-      url: https://test.pypi.org/p/${{ env.APP_PACKAGE_NAME }}
+      url: ${{ env.TEST_REPO_URL }}/p/${{ env.APP_PACKAGE_NAME }}
 
     permissions:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
@@ -183,13 +104,35 @@ jobs:
         id: check
         uses: ./.github/actions/publish-pypi-version-check
         with:
-          repository-url: https://test.pypi.org/simple
+          repository-url: ${{ env.TEST_REPO_URL }}/simple
       - name: Publish distribution to TestPyPI
         if: steps.check.outputs.exists == 'false'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          repository-url: https://test.pypi.org/legacy/
+          repository-url: ${{ env.TEST_REPO_URL }}/legacy/
           verbose: true
+
+  intTestpypi:
+    name: Test published package
+    needs:
+      - pre
+      - publishTestpypi
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Install distribution from repo
+        run: |
+          pip install -i ${{ env.TEST_REPO_URL }}/simple ${{ env.APP_PACKAGE_NAME }}
+          pip list | grep "${{ needs.pre.outputs.APP_PACKAGE_PREFIX }}"
+      - name: Run test script
+        run: |
+          python3 tests/main.py | grep "Hello from"
 
   #---------------------------------------------------------------------------#
 
@@ -230,7 +173,7 @@ jobs:
 
     environment:
       name: pypi
-      url: https://pypi.org/p/${{ github.event.repository.name }}
+      url: ${{ env.REPO_URL }}/p/${{ github.event.repository.name }}
 
     permissions:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
