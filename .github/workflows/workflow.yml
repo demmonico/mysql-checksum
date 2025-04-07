@@ -96,11 +96,10 @@ jobs:
         uses: ./.github/actions/publish-pypi-version-check
         with:
           is-test-pypi-repo: 'true'
-#      - name: Output results
-#        shell: bash
-#        run: |
-#          echo "exists=${{ steps.check.outputs.exists }}" >> $GITHUB_ENV
-#          echo "test=${{ steps.check.outputs.test }}" >> $GITHUB_ENV
+      - name: Output results
+        shell: bash
+        run: |
+          echo "exists=${{ steps.version_check.outputs.exists }}" >> $GITHUB_ENV
 
 
 
