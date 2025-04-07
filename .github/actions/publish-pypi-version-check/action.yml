@@ -26,6 +26,12 @@ runs:
           url_param=" --index-url https://test.pypi.org/simple"
         fi
         versions=$(pip index $url_param versions ${{ env.APP_PACKAGE_NAME }} | grep Available)
-        echo -e "Versions available on TestPyPI: \n$( echo "$versions" | grep "$package_version" )"
+        echo -e "Versions available on TestPyPI: \n$( echo "$versions" | grep --color=always "$package_version" )"
 
-        echo "exists=$(echo "$versions" | grep "$package_version" > /dev/null 2>&1 && echo 'true' || echo 'false' )" >> $GITHUB_OUTPUT
+        exists="$(echo "$versions" | grep "$package_version" > /dev/null 2>&1 && echo 'true' || echo 'false' )"
+        echo "exists=$(echo "$exists")" >> $GITHUB_OUTPUT
+        if [ "$exists" == "true" ]; then
+          echo "Package version $package_version already exists on [Test]PyPI"
+        else
+          echo "Package version $package_version does not exist on [Test]PyPI"
+        fi
