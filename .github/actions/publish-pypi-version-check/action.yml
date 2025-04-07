@@ -1,9 +1,6 @@
 name: 'Publish to PyPI Version Check'
 
 inputs:
-  packages:
-    description: 'List of the built packages'
-    required: true
   is-test-pypi-repo:
     description: 'Flag defining if the repo is PyPI'
     required: true

@@ -68,9 +68,7 @@ jobs:
           path: dist/
       - name: Install distribution from the local package
         run: |
-          packages="$(find ./dist -type f -name '*.whl')"
-          echo "PACKAGES=$(echo "$packages")" >> $GITHUB_OUTPUT
-          pip install $(echo "$packages")
+          pip install $(find ./dist -type f -name '*.whl')
           pip list | grep "${{ needs.pre.outputs.APP_PACKAGE_PREFIX }}"
       - name: Run test script
         run: |
@@ -98,7 +96,6 @@ jobs:
         uses: ./.github/actions/publish-pypi-version-check
         with:
           is-test-pypi-repo: 'true'
-          packages: ${{ needs.localTest.outputs.PACKAGES }}
 
 
 
@@ -153,8 +150,6 @@ jobs:
           path: dist/
       - name: Check repo versions
         uses: ./.github/actions/publish-pypi-version-check
-        with:
-          packages: ${{ needs.localTest.outputs.PACKAGES }}
 
 
 
