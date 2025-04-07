@@ -53,5 +53,5 @@ runs:
       if: steps.check.outputs.exists == 'false'
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        repository-url: ${{ steps.pre.outputs.REPO_URL }}
+        repository-url: https://upload.pypi.org/legacy/
         verbose: true
