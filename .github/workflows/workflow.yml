@@ -90,7 +90,8 @@ jobs:
         with:
           name: python-package-distributions
           path: dist/
-      - id: version_check
+      - name: Version check
+        id: version_check
         uses: ./.github/actions/publish-pypi-version-check
         with:
           is-test-pypi-repo: 'true'
@@ -147,7 +148,8 @@ jobs:
         with:
           name: python-package-distributions
           path: dist/
-      - id: version_check
+      - name: Version check
+        id: version_check
         uses: ./.github/actions/publish-pypi-version-check
 
     outputs:
