@@ -102,6 +102,8 @@ jobs:
           echo "myexists=${{ steps.version_check.outputs.exists }}"
           echo "myexists=${{ steps.version_check.outputs.exists }}" >> $GITHUB_ENV
 
+    outputs:
+      APP_PACKAGE_EXISTS: ${{ steps.version_check.outputs.exists }}
 
 
   publishTestpypiCheckDebug:
@@ -116,6 +118,7 @@ jobs:
         run: |
           echo "needs.publishTestpypiCheck.outputs.exists: ${{ needs.publishTestpypiCheck.outputs.exists }}"
           echo "needs.publishTestpypiCheck.outputs.myexists: ${{ needs.publishTestpypiCheck.outputs.myexists }}"
+          echo "needs.publishTestpypiCheck.outputs.APP_PACKAGE_EXISTS: ${{ needs.publishTestpypiCheck.outputs.APP_PACKAGE_EXISTS }}"
 
 
 
