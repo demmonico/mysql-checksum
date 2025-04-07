@@ -19,12 +19,17 @@ runs:
           REPO_URL="https://test.pypi.org/legacy/"
           REPO_URL_PARAM=" --index-url https://test.pypi.org/simple"
         fi
+        echo "REPO_URL=$REPO_URL"
         echo "REPO_URL=$REPO_URL" >> $GITHUB_ENV
+        echo "REPO_URL_PARAM=$REPO_URL_PARAM"
         echo "REPO_URL_PARAM=$REPO_URL_PARAM" >> $GITHUB_ENV
     - name: Check repo versions
       id: check
       shell: bash
       run: |
+        echo "REPO_URL=${{ steps.pre.outputs.REPO_URL }}"
+        echo "REPO_URL_PARAM=${{ steps.pre.outputs.REPO_URL_PARAM }}"
+        
         package_version=$( find ./dist -type f -name '*.whl' | sed -E "s/^.*${{ env.APP_PACKAGE_PREFIX }}-([0-9.]+)-py3.*\$/\1/g")
         repo_versions=$(pip index ${{ steps.pre.outputs.REPO_URL_PARAM }} versions ${{ env.APP_PACKAGE_NAME }} | grep Available)
         echo -e "Versions available in repo: \n$( echo "$repo_versions" | grep --color=always "$package_version" )"
