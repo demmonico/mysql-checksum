@@ -12,6 +12,7 @@ env:
 jobs:
 
   pre:
+    name: Prepare environment
     runs-on: ubuntu-latest
     steps:
       - run: echo ""
