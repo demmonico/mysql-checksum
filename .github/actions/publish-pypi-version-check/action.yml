@@ -1,13 +1,13 @@
-name: 'Publish to PyPI Version Check'
+name: 'Repo Version Check'
 
 inputs:
-  is-test-upload:
-    description: 'Flag defining if the repo is PyPI'
-    required: true
-    default: 'false'
+  repository-url:
+    description: 'Package repository url'
+    required: false
+    default: ''
 outputs:
   exists:
-    description: "Flag indicating if the package version exists on PyPI"
+    description: "Flag indicating if the package version exists in repo"
     value: ${{ steps.check.outputs.exists }}
 
 runs:
@@ -17,21 +17,19 @@ runs:
       id: check
       shell: bash
       run: |
-        echo "APP_PACKAGE_NAME = ${{ env.APP_PACKAGE_NAME }}"
-        echo "APP_PACKAGE_PREFIX = ${{ env.APP_PACKAGE_PREFIX }}"
         package_version=$( find ./dist -type f -name '*.whl' | sed -E "s/^.*${{ env.APP_PACKAGE_PREFIX }}-([0-9.]+)-py3.*\$/\1/g")
 
         url_param=""
-        if [ "${{ inputs.is-test-upload }}" == "true" ]; then
-          url_param=" --index-url https://test.pypi.org/simple"
+        if [ "${{ inputs.repository-url }}" != "" ]; then
+          url_param=" --index-url ${{ inputs.repository-url }}"
         fi
         versions=$(pip index $url_param versions ${{ env.APP_PACKAGE_NAME }} | grep Available)
-        echo -e "Versions available on TestPyPI: \n$( echo "$versions" | grep --color=always "$package_version" )"
+        echo -e "Versions available in repo: \n$( echo "$versions" | grep --color=always "$package_version" )"
 
         exists="$(echo "$versions" | grep "$package_version" > /dev/null 2>&1 && echo 'true' || echo 'false' )"
         if [ "$exists" == "true" ]; then
-          echo "Package version $package_version already exists on [Test]PyPI, thus the publish step will be skipped"
+          echo "Package version $package_version already exists in repo, thus the publish step will be skipped"
         else
-          echo "Package version $package_version does not exist on [Test]PyPI"
+          echo "Package version $package_version does not exist in repo"
         fi
         echo "exists=$(echo "$exists")" >> $GITHUB_OUTPUT

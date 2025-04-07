@@ -183,7 +183,7 @@ jobs:
         id: check
         uses: ./.github/actions/publish-pypi-version-check
         with:
-          is-test-upload: 'true'
+          repository-url: https://test.pypi.org/simple
       - name: Publish distribution to TestPyPI
         if: steps.check.outputs.exists == 'false'
         uses: pypa/gh-action-pypi-publish@release/v1
