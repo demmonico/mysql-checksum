@@ -19,7 +19,7 @@ runs:
     - name: Check repo versions
       shell: bash
       run: |
-        package_version=$( echo ${{ inputs.packages }} | sed -E "s/^.*${{ env.APP_PACKAGE_PREFIX }}-([0-9.]+)-py3.*\$/\1/g")
+        package_version=$( find ./dist -type f -name '*.whl' | sed -E "s/^.*${{ env.APP_PACKAGE_PREFIX }}-([0-9.]+)-py3.*\$/\1/g")
 
         url_param=""
         if [ "${{ inputs.is-test-pypi-repo }}" == "true" ]; then
@@ -31,7 +31,7 @@ runs:
         exists="$(echo "$versions" | grep "$package_version" > /dev/null 2>&1 && echo 'true' || echo 'false' )"
         echo "exists=$(echo "$exists")" >> $GITHUB_OUTPUT
         if [ "$exists" == "true" ]; then
-          echo "Package version $package_version already exists on [Test]PyPI"
+          echo "Package version $package_version already exists on [Test]PyPI, thus the publish step will be skipped"
         else
           echo "Package version $package_version does not exist on [Test]PyPI"
         fi

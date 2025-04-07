@@ -78,23 +78,6 @@ jobs:
   
 
 
-#  publishTestpypiCheck:
-#    name: Prep to publish to TestPyPI
-#    needs:
-#      - pre
-#      - localTest
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      - name: Check repo versions
-#        run: |
-#          package_version=$(find ./dist -type f -name '*.whl' | sed -E "s/^.*${{ needs.pre.outputs.APP_PACKAGE_PREFIX }}-([0-9.]+)-py3.*\$/\1/g")
-#
-#          versions=$(pip index versions ${{ env.APP_PACKAGE_NAME }} | grep Available)
-#          echo -e "Versions available on TestPyPI: \n$( echo "$versions" | grep "$package_version" )"
-#
-#          echo "exists=$(echo "$versions" | grep "$package_version" > /dev/null 2>&1 && echo 'true' || echo 'false' )" >> $GITHUB_OUTPUT
-
   publishTestpypiCheck:
     name: Prep to publish to TestPyPI
     needs:
@@ -106,6 +89,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
       - name: Check repo versions
         uses: ./.github/actions/publish-pypi-version-check
         with:
@@ -116,6 +104,7 @@ jobs:
 
   publishTestpypi:
     name: Publish to TestPyPI
+
     needs:
       - publishTestpypiCheck
     if: needs.publishTestpypiCheck.outputs.exists == 'true'
@@ -144,12 +133,36 @@ jobs:
 
 
 
+  publishPypiCheck:
+    name: Prep to publish to PyPI
+
+    needs:
+      - pre
+      - localTest
+    if: startsWith(github.ref, 'refs/tags/v')  # only publish to PyPI on tag pushes
+    runs-on: ubuntu-latest
+    env:
+      APP_PACKAGE_PREFIX: ${{ needs.pre.outputs.APP_PACKAGE_PREFIX }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Check repo versions
+        uses: ./.github/actions/publish-pypi-version-check
+        with:
+          packages: ${{ needs.localTest.outputs.PACKAGES }}
+
+
+
   publishPypi:
     name: Publish to PyPI
 
-    if: startsWith(github.ref, 'refs/tags/v')  # only publish to PyPI on tag pushes
     needs:
-      - localTest
+      - publishPypiCheck
     runs-on: ubuntu-latest
 
     environment:
@@ -172,6 +185,7 @@ jobs:
 
   github-release:
     name: Upload to GitHub Release
+
     needs:
       - publishPypi
     runs-on: ubuntu-latest
