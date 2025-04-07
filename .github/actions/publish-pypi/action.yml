@@ -1,0 +1,50 @@
+name: 'Publish to PyPI Version Check'
+
+inputs:
+  is-test-upload:
+    description: 'Flag defining if upload is test one'
+    required: true
+    default: 'false'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Prepare environment
+      id: pre
+      shell: bash
+      run: |
+        REPO_URL="https://upload.pypi.org"
+        REPO_URL_PARAM=""
+        if [ "${{ inputs.is-test-upload }}" == "true" ]; then
+          REPO_URL="https://test.pypi.org"
+          REPO_URL_PARAM=" --index-url $REPO_URL/simple"
+        fi
+        echo "REPO_URL=$REPO_URL" >> $GITHUB_ENV
+        echo "REPO_URL_PARAM=$REPO_URL_PARAM" >> $GITHUB_ENV
+    - name: Check repo versions
+      id: check
+      shell: bash
+      run: |
+        package_version=$( find ./dist -type f -name '*.whl' | sed -E "s/^.*${{ env.APP_PACKAGE_PREFIX }}-([0-9.]+)-py3.*\$/\1/g")
+        repo_versions=$(pip index ${{ steps.pre.outputs.REPO_URL_PARAM }} versions ${{ env.APP_PACKAGE_NAME }} | grep Available)
+        echo -e "Versions available in repo: \n$( echo "$repo_versions" | grep --color=always "$package_version" )"
+
+        exists="$(echo "$repo_versions" | grep "$package_version" > /dev/null 2>&1 && echo 'true' || echo 'false' )"
+        if [ "$exists" == "true" ]; then
+          echo "Package version $package_version already exists in repo, thus the publish step will be skipped"
+        else
+          echo "Package version $package_version does not exist in repo"
+        fi
+        echo "exists=$(echo "$exists")" >> $GITHUB_OUTPUT
+    - name: Download all the dists
+      if: steps.check.outputs.exists == 'false'
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: Publish distribution to TestPyPI
+      if: steps.check.outputs.exists == 'false'
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        repository-url: ${{ steps.pre.outputs.REPO_URL }}/legacy/
+        verbose: true
