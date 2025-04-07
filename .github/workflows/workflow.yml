@@ -93,9 +93,13 @@ jobs:
           name: python-package-distributions
           path: dist/
       - name: Check repo versions
+        id: check
         uses: ./.github/actions/publish-pypi-version-check
         with:
           is-test-pypi-repo: 'true'
+      - name: Output results
+        shell: bash
+        run: echo "exists=${{ steps.check.outputs.exists }}" >> $GITHUB_ENV
 
 
 

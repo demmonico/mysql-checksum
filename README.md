@@ -1,3 +1,8 @@
+[![License](https://img.shields.io/github/license/demmonico/mysql-checksum)](LICENSE)
+[![Pipeline](https://github.com/demmonico/mysql-checksum/actions/workflows/workflow.yml/badge.svg)](https://github.com/demmonico/mysql-checksum/actions/workflows/workflow.yml)
+![GitHub Tag](https://img.shields.io/github/v/tag/demmonico/mysql-checksum)
+
+
 # MySQL Checksum Package Project
 
 ## Description
