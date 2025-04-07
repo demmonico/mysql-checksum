@@ -99,7 +99,9 @@ jobs:
           is-test-pypi-repo: 'true'
       - name: Output results
         shell: bash
-        run: echo "exists=${{ steps.check.outputs.exists }}" >> $GITHUB_ENV
+        run: |
+          echo "exists=${{ steps.check.outputs.exists }}" >> $GITHUB_ENV
+          echo "test=${{ steps.check.outputs.test }}" >> $GITHUB_ENV
 
 
 
@@ -112,8 +114,10 @@ jobs:
     steps:
       - name: Debug
         shell: bash
-        run: >-
+        run: |
           echo "needs.publishTestpypiCheck.outputs.exists: ${{ needs.publishTestpypiCheck.outputs.exists }}"
+          echo "needs.publishTestpypiCheck.outputs.test: ${{ needs.publishTestpypiCheck.outputs.test }}"
+          echo "needs.publishTestpypiCheck.outputs.test0: ${{ needs.publishTestpypiCheck.outputs.test0 }}"
 
 
 
@@ -122,7 +126,7 @@ jobs:
 
     needs:
       - publishTestpypiCheck
-    if: needs.publishTestpypiCheck.outputs.exists == 'true'
+    if: needs.publishTestpypiCheck.outputs.exists == 'aaaa'
     runs-on: ubuntu-latest
 
     environment:

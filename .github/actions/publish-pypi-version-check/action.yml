@@ -26,9 +26,11 @@ runs:
         echo -e "Versions available on TestPyPI: \n$( echo "$versions" | grep --color=always "$package_version" )"
 
         exists="$(echo "$versions" | grep "$package_version" > /dev/null 2>&1 && echo 'true' || echo 'false' )"
-        echo "exists=$(echo "$exists")" >> $GITHUB_OUTPUT
         if [ "$exists" == "true" ]; then
           echo "Package version $package_version already exists on [Test]PyPI, thus the publish step will be skipped"
         else
           echo "Package version $package_version does not exist on [Test]PyPI"
         fi
+        echo "test0=mytest0" >> $GITHUB_OUTPUT
+        echo "exists=$(echo "$exists")" >> $GITHUB_OUTPUT
+        echo "test=mytest" >> $GITHUB_OUTPUT
