@@ -1,0 +1,28 @@
+name: 'Publish to PyPI Version Check'
+
+inputs:
+  is-test-pypi-repo:
+    description: 'Flag defining if the repo is PyPI'
+    required: true
+    default: 'false'
+outputs:
+  exists:
+    description: "Flag indicating if the package version exists on PyPI"
+    value: ${{ steps.check-repo-versions.outputs.exists }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Check repo versions
+      shell: bash
+      run: |
+        package_version=$(find ./dist -type f -name '*.whl' | sed -E "s/^.*${{ needs.pre.outputs.APP_PACKAGE_PREFIX }}-([0-9.]+)-py3.*\$/\1/g")
+
+        url_param=""
+        if [ "${{ inputs.is-test-pypi-repo }}" == "true" ]; then
+          url_param=" --index-url https://test.pypi.org/simple"
+        fi
+        versions=$(pip index $url_param versions ${{ env.APP_PACKAGE_NAME }} | grep Available)
+        echo -e "Versions available on TestPyPI: \n$( echo "$versions" | grep "$package_version" )"
+
+        echo "exists=$(echo "$versions" | grep "$package_version" > /dev/null 2>&1 && echo 'true' || echo 'false' )" >> $GITHUB_OUTPUT

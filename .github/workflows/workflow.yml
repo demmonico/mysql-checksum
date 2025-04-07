@@ -6,7 +6,20 @@ on:
 
 permissions: read-all
 
+env:
+  APP_PACKAGE_NAME: ${{ github.event.repository.name }}
+
 jobs:
+
+  pre:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ""
+    outputs:
+      APP_PACKAGE_PREFIX: "$( echo "${{ env.APP_PACKAGE_NAME }}" | tr '-' '_' )"
+
+
+
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -33,9 +46,14 @@ jobs:
           name: python-package-distributions
           path: dist/
 
-  local-test:
+
+  #---------------------------------------------------------------------------#
+  # Tests
+
+  localTest:
     name: Test locally
     needs:
+      - pre
       - build
     runs-on: ubuntu-latest
 
@@ -51,26 +69,55 @@ jobs:
       - name: Install distribution from the local package
         run: |
           pip install $(find ./dist -type f -name '*.whl')
-          pip list | grep "$( echo "${{ github.event.repository.name }}" | tr '-' '_' )"
+          pip list | grep "${{ needs.pre.outputs.APP_PACKAGE_PREFIX }}"
       - name: Run test script
         run: |
-          pwd
-          ls -al
-          ls -al tests/
-          python3 tests/main.py
+          python3 tests/main.py | grep "Hello from"
   
 
-  # Publish to TestPyPI on master pushes
 
-  publish-to-testpypi:
+#  publishTestpypiCheck:
+#    name: Prep to publish to TestPyPI
+#    needs:
+#      - pre
+#      - localTest
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Check repo versions
+#        run: |
+#          package_version=$(find ./dist -type f -name '*.whl' | sed -E "s/^.*${{ needs.pre.outputs.APP_PACKAGE_PREFIX }}-([0-9.]+)-py3.*\$/\1/g")
+#
+#          versions=$(pip index versions ${{ env.APP_PACKAGE_NAME }} | grep Available)
+#          echo -e "Versions available on TestPyPI: \n$( echo "$versions" | grep "$package_version" )"
+#
+#          echo "exists=$(echo "$versions" | grep "$package_version" > /dev/null 2>&1 && echo 'true' || echo 'false' )" >> $GITHUB_OUTPUT
+
+  publishTestpypiCheck:
+    name: Prep to publish to TestPyPI
+    needs:
+      - pre
+      - localTest
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check repo versions
+        uses: ./.github/actions/publish-pypi-version-check
+        with:
+          is-test-pypi-repo: 'true'
+
+
+
+  publishTestpypi:
     name: Publish to TestPyPI
     needs:
-      - local-test
+      - publishTestpypiCheck
+    if: needs.publishTestpypiCheck.outputs.exists == 'true'
     runs-on: ubuntu-latest
 
     environment:
       name: testpypi
-      url: https://test.pypi.org/p/${{ github.event.repository.name }}
+      url: https://test.pypi.org/p/${{ env.APP_PACKAGE_NAME }}
 
     permissions:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
@@ -87,15 +134,16 @@ jobs:
           repository-url: https://test.pypi.org/legacy/
           verbose: true
 
+  #---------------------------------------------------------------------------#
 
-  # Publish to PyPI only on tag pushes
 
-  publish-to-pypi:
+
+  publishPypi:
     name: Publish to PyPI
 
-    if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
+    if: startsWith(github.ref, 'refs/tags/v')  # only publish to PyPI on tag pushes
     needs:
-      - build
+      - localTest
     runs-on: ubuntu-latest
 
     environment:
@@ -114,10 +162,12 @@ jobs:
       - name: Publish distribution 📦 to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
 
+
+
   github-release:
     name: Upload to GitHub Release
     needs:
-      - publish-to-pypi
+      - publishPypi
     runs-on: ubuntu-latest
 
     permissions:
