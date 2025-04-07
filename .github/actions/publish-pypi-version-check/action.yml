@@ -17,6 +17,8 @@ runs:
       id: check
       shell: bash
       run: |
+        echo "APP_PACKAGE_NAME = ${{ env.APP_PACKAGE_NAME }}"
+        echo "APP_PACKAGE_PREFIX = ${{ env.APP_PACKAGE_PREFIX }}"
         package_version=$( find ./dist -type f -name '*.whl' | sed -E "s/^.*${{ env.APP_PACKAGE_PREFIX }}-([0-9.]+)-py3.*\$/\1/g")
 
         url_param=""
