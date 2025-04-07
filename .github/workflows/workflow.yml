@@ -75,58 +75,58 @@ jobs:
           python3 tests/main.py | grep "Hello from"
   
 
-  publishTestpypiCheck:
-    name: Prep to publish to TestPyPI
-    needs:
-      - pre
-      - localTest
-    runs-on: ubuntu-latest
-    env:
-      APP_PACKAGE_PREFIX: ${{ needs.pre.outputs.APP_PACKAGE_PREFIX }}
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Download all the dists
-        uses: actions/download-artifact@v4
-        with:
-          name: python-package-distributions
-          path: dist/
-      - name: Version check
-        id: version_check
-        uses: ./.github/actions/publish-pypi-version-check
-        with:
-          is-test-pypi-repo: 'true'
-
-    outputs:
-      APP_PACKAGE_EXISTS: ${{ steps.version_check.outputs.exists }}
-
-
-  publishTestpypi:
-    name: Publish to TestPyPI
-
-    needs:
-      - publishTestpypiCheck
-    if: needs.publishTestpypiCheck.outputs.APP_PACKAGE_EXISTS == 'false'  # only publish to TestPyPI if the package version does not exist
-    runs-on: ubuntu-latest
-
-    environment:
-      name: testpypi
-      url: https://test.pypi.org/p/${{ env.APP_PACKAGE_NAME }}
-
-    permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
-
-    steps:
-      - name: Download all the dists
-        uses: actions/download-artifact@v4
-        with:
-          name: python-package-distributions
-          path: dist/
-      - name: Publish distribution to TestPyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://test.pypi.org/legacy/
-          verbose: true
+#  publishTestpypiCheck:
+#    name: Prep to publish to TestPyPI
+#    needs:
+#      - pre
+#      - localTest
+#    runs-on: ubuntu-latest
+#    env:
+#      APP_PACKAGE_PREFIX: ${{ needs.pre.outputs.APP_PACKAGE_PREFIX }}
+#
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Download all the dists
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: python-package-distributions
+#          path: dist/
+#      - name: Version check
+#        id: version_check
+#        uses: ./.github/actions/publish-pypi-version-check
+#        with:
+#          is-test-pypi-repo: 'true'
+#
+#    outputs:
+#      APP_PACKAGE_EXISTS: ${{ steps.version_check.outputs.exists }}
+#
+#
+#  publishTestpypi:
+#    name: Publish to TestPyPI
+#
+#    needs:
+#      - publishTestpypiCheck
+#    if: needs.publishTestpypiCheck.outputs.APP_PACKAGE_EXISTS == 'false'  # only publish to TestPyPI if the package version does not exist
+#    runs-on: ubuntu-latest
+#
+#    environment:
+#      name: testpypi
+#      url: https://test.pypi.org/p/${{ env.APP_PACKAGE_NAME }}
+#
+#    permissions:
+#      id-token: write  # IMPORTANT: mandatory for trusted publishing
+#
+#    steps:
+#      - name: Download all the dists
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: python-package-distributions
+#          path: dist/
+#      - name: Publish distribution to TestPyPI
+#        uses: pypa/gh-action-pypi-publish@release/v1
+#        with:
+#          repository-url: https://test.pypi.org/legacy/
+#          verbose: true
 
 #  publishTestpypi:
 #    name: Publish to TestPyPI
@@ -155,6 +155,41 @@ jobs:
 #        uses: ./.github/actions/publish-pypi
 #        with:
 #          is-test-upload: 'true'
+
+  publishTestpypi:
+    name: Publish to TestPyPI
+    needs:
+      - pre
+      - localTest
+    runs-on: ubuntu-latest
+    env:
+      APP_PACKAGE_PREFIX: ${{ needs.pre.outputs.APP_PACKAGE_PREFIX }}
+
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/${{ env.APP_PACKAGE_NAME }}
+
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Version check
+        id: check
+        uses: ./.github/actions/publish-pypi-version-check
+        with:
+          is-test-upload: 'true'
+      - name: Publish distribution to TestPyPI
+        if: steps.check.outputs.exists == 'false'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          verbose: true
 
   #---------------------------------------------------------------------------#
 

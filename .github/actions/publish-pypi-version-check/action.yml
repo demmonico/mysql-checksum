@@ -1,7 +1,7 @@
 name: 'Publish to PyPI Version Check'
 
 inputs:
-  is-test-pypi-repo:
+  is-test-upload:
     description: 'Flag defining if the repo is PyPI'
     required: true
     default: 'false'
@@ -22,7 +22,7 @@ runs:
         package_version=$( find ./dist -type f -name '*.whl' | sed -E "s/^.*${{ env.APP_PACKAGE_PREFIX }}-([0-9.]+)-py3.*\$/\1/g")
 
         url_param=""
-        if [ "${{ inputs.is-test-pypi-repo }}" == "true" ]; then
+        if [ "${{ inputs.is-test-upload }}" == "true" ]; then
           url_param=" --index-url https://test.pypi.org/simple"
         fi
         versions=$(pip index $url_param versions ${{ env.APP_PACKAGE_NAME }} | grep Available)
