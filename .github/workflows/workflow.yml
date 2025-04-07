@@ -19,7 +19,6 @@ jobs:
       APP_PACKAGE_PREFIX: $( echo "${{ env.APP_PACKAGE_NAME }}" | tr '-' '_' )
 
 
-
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -75,7 +74,6 @@ jobs:
           python3 tests/main.py | grep "Hello from"
   
 
-
   publishTestpypiCheck:
     name: Prep to publish to TestPyPI
     needs:
@@ -96,30 +94,9 @@ jobs:
         uses: ./.github/actions/publish-pypi-version-check
         with:
           is-test-pypi-repo: 'true'
-      - name: Output results
-        shell: bash
-        run: |
-          echo "myexists=${{ steps.version_check.outputs.exists }}"
-          echo "myexists=${{ steps.version_check.outputs.exists }}" >> $GITHUB_ENV
 
     outputs:
       APP_PACKAGE_EXISTS: ${{ steps.version_check.outputs.exists }}
-
-
-  publishTestpypiCheckDebug:
-    name: Prep to publish to TestPyPI DEBUG
-    needs:
-      - publishTestpypiCheck
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Debug
-        shell: bash
-        run: |
-          echo "needs.publishTestpypiCheck.outputs.exists: ${{ needs.publishTestpypiCheck.outputs.exists }}"
-          echo "needs.publishTestpypiCheck.outputs.myexists: ${{ needs.publishTestpypiCheck.outputs.myexists }}"
-          echo "needs.publishTestpypiCheck.outputs.APP_PACKAGE_EXISTS: ${{ needs.publishTestpypiCheck.outputs.APP_PACKAGE_EXISTS }}"
-
 
 
   publishTestpypi:
@@ -127,7 +104,7 @@ jobs:
 
     needs:
       - publishTestpypiCheck
-    if: needs.publishTestpypiCheck.outputs.exists == 'aaaa'
+    if: needs.publishTestpypiCheck.outputs.APP_PACKAGE_EXISTS == 'false'  # only publish to TestPyPI if the package version does not exist
     runs-on: ubuntu-latest
 
     environment:
@@ -152,7 +129,6 @@ jobs:
   #---------------------------------------------------------------------------#
 
 
-
   publishPypiCheck:
     name: Prep to publish to PyPI
 
@@ -171,9 +147,11 @@ jobs:
         with:
           name: python-package-distributions
           path: dist/
-      - name: Check repo versions
+      - id: version_check
         uses: ./.github/actions/publish-pypi-version-check
 
+    outputs:
+      APP_PACKAGE_EXISTS: ${{ steps.version_check.outputs.exists }}
 
 
   publishPypi:
@@ -181,6 +159,7 @@ jobs:
 
     needs:
       - publishPypiCheck
+    if: needs.publishPypiCheck.outputs.APP_PACKAGE_EXISTS == 'false'  # only publish to PyPI if the package version does not exist
     runs-on: ubuntu-latest
 
     environment:
@@ -198,7 +177,6 @@ jobs:
           path: dist/
       - name: Publish distribution 📦 to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-
 
 
   github-release:
