@@ -32,4 +32,5 @@ runs:
         else
           echo "Package version $package_version does not exist on [Test]PyPI"
         fi
+        echo "exists=$(echo "$exists")"
         echo "exists=$(echo "$exists")" >> $GITHUB_OUTPUT

@@ -99,6 +99,7 @@ jobs:
       - name: Output results
         shell: bash
         run: |
+          echo "exists=${{ steps.version_check.outputs.exists }}"
           echo "exists=${{ steps.version_check.outputs.exists }}" >> $GITHUB_ENV
 
 
