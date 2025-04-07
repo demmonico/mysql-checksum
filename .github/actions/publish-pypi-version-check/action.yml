@@ -8,12 +8,13 @@ inputs:
 outputs:
   exists:
     description: "Flag indicating if the package version exists on PyPI"
-    value: ${{ steps.check-repo-versions.outputs.exists }}
+    value: ${{ steps.check.outputs.exists }}
 
 runs:
   using: "composite"
   steps:
     - name: Check repo versions
+      id: check
       shell: bash
       run: |
         package_version=$( find ./dist -type f -name '*.whl' | sed -E "s/^.*${{ env.APP_PACKAGE_PREFIX }}-([0-9.]+)-py3.*\$/\1/g")
@@ -31,6 +32,4 @@ runs:
         else
           echo "Package version $package_version does not exist on [Test]PyPI"
         fi
-        echo "test0=mytest0" >> $GITHUB_OUTPUT
         echo "exists=$(echo "$exists")" >> $GITHUB_OUTPUT
-        echo "test=mytest" >> $GITHUB_OUTPUT
