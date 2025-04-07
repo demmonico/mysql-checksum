@@ -16,7 +16,7 @@ runs:
     - name: Check repo versions
       shell: bash
       run: |
-        package_version=$(find ./dist -type f -name '*.whl' | sed -E "s/^.*${{ needs.pre.outputs.APP_PACKAGE_PREFIX }}-([0-9.]+)-py3.*\$/\1/g")
+        package_version=$(find ./dist -type f -name '*.whl' | sed -E "s/^.*${{ env.APP_PACKAGE_PREFIX }}-([0-9.]+)-py3.*\$/\1/g")
 
         url_param=""
         if [ "${{ inputs.is-test-pypi-repo }}" == "true" ]; then

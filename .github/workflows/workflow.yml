@@ -99,6 +99,8 @@ jobs:
       - pre
       - localTest
     runs-on: ubuntu-latest
+    env:
+      APP_PACKAGE_PREFIX: ${{ needs.pre.outputs.APP_PACKAGE_PREFIX }}
 
     steps:
       - uses: actions/checkout@v4
