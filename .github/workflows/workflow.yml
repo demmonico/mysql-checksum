@@ -3,6 +3,8 @@ name: Publish distribution
 on:
   push:
     branches: [ master ]
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
 
 permissions: read-all
 
