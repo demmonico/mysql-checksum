@@ -1,4 +1,4 @@
-name: 'Repo Version Check'
+name: 'Package Remote Versions Check'
 
 inputs:
   repository-url:
@@ -13,7 +13,7 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Check repo versions
+    - name: Check package versions in repository
       id: check
       shell: bash
       run: |

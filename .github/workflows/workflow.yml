@@ -77,8 +77,8 @@ jobs:
           python3 tests/main.py | grep "Hello from"
   
 
-  publishTestpypi:
-    name: Publish to TestPyPI
+  versionCheckTestpypi:
+    name: Version check at TestPyPI
     needs:
       - pre
       - localTest
@@ -94,7 +94,6 @@ jobs:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
 
     steps:
-      - uses: actions/checkout@v4
       - name: Download all the dists
         uses: actions/download-artifact@v4
         with:
@@ -105,31 +104,55 @@ jobs:
         uses: ./.github/actions/publish-pypi-version-check
         with:
           repository-url: ${{ env.TEST_REPO_URL }}/simple
+
+    outputs:
+      exists: ${{ steps.check.outputs.exists }}
+
+
+  publishTestpypi:
+    name: Publish to TestPyPI
+    needs:
+      - pre
+      - versionCheckTestpypi
+    if: needs.versionCheckTestpypi.outputs.exists == 'false'
+    runs-on: ubuntu-latest
+    env:
+      APP_PACKAGE_PREFIX: ${{ needs.pre.outputs.APP_PACKAGE_PREFIX }}
+
+    environment:
+      name: testpypi
+      url: ${{ env.TEST_REPO_URL }}/p/${{ env.APP_PACKAGE_NAME }}
+
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
       - name: Publish distribution to TestPyPI
-        if: steps.check.outputs.exists == 'false'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: ${{ env.TEST_REPO_URL }}/legacy/
           verbose: true
 
-  intTestpypi:
-    name: Test published package
+
+  intTestTestpypi:
+    name: Integration test from TestPyPI
     needs:
       - pre
       - publishTestpypi
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - name: Download all the dists
-        uses: actions/download-artifact@v4
-        with:
-          name: python-package-distributions
-          path: dist/
       - name: Install distribution from repo
         run: |
           pip install -i ${{ env.TEST_REPO_URL }}/simple ${{ env.APP_PACKAGE_NAME }}
           pip list | grep "${{ needs.pre.outputs.APP_PACKAGE_PREFIX }}"
+
+      - uses: actions/checkout@v4
       - name: Run test script
         run: |
           python3 tests/main.py | grep "Hello from"
