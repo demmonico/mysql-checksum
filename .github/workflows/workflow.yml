@@ -13,7 +13,7 @@ env:
 
 jobs:
 
-  pre:
+  envPrep:
     name: Prepare environment
     runs-on: ubuntu-latest
     steps:
@@ -55,7 +55,7 @@ jobs:
   localTest:
     name: Test locally
     needs:
-      - pre
+      - envPrep
       - build
     runs-on: ubuntu-latest
 
@@ -71,20 +71,20 @@ jobs:
       - name: Install distribution from the local package
         run: |
           pip install $(find ./dist -type f -name '*.whl')
-          pip list | grep "${{ needs.pre.outputs.APP_PACKAGE_PREFIX }}"
+          pip list | grep "${{ needs.envPrep.outputs.APP_PACKAGE_PREFIX }}"
       - name: Run test script
         run: |
           python3 tests/main.py | grep "Hello from"
   
 
-  versionCheckTestpypi:
+  versionCheck_TestPypi:
     name: Version check at TestPyPI
     needs:
-      - pre
+      - envPrep
       - localTest
     runs-on: ubuntu-latest
     env:
-      APP_PACKAGE_PREFIX: ${{ needs.pre.outputs.APP_PACKAGE_PREFIX }}
+      APP_PACKAGE_PREFIX: ${{ needs.envPrep.outputs.APP_PACKAGE_PREFIX }}
 
     steps:
       - uses: actions/checkout@v4
@@ -103,12 +103,12 @@ jobs:
       exists: ${{ steps.check.outputs.exists }}
 
 
-  publishTestpypi:
+  publish_TestPypi:
     name: Publish to TestPyPI
     needs:
-      - pre
-      - versionCheckTestpypi
-    if: needs.versionCheckTestpypi.outputs.exists == 'false'
+      - envPrep
+      - versionCheck_TestPypi
+    if: needs.versionCheck_TestPypi.outputs.exists == 'false'
     runs-on: ubuntu-latest
 
     environment:
@@ -131,37 +131,37 @@ jobs:
           verbose: true
 
 
-  intTestTestpypi:
+  integrationTest_TestPypi:
     name: Integration test from TestPyPI
     needs:
-      - pre
-      - publishTestpypi
+      - envPrep
+      - publish_TestPypi
     runs-on: ubuntu-latest
 
     steps:
       - name: Install distribution from repo
         run: |
           pip install -i ${{ env.TEST_REPO_URL }}/simple ${{ env.APP_PACKAGE_NAME }}
-          pip list | grep "${{ needs.pre.outputs.APP_PACKAGE_PREFIX }}"
+          pip list | grep "${{ needs.envPrep.outputs.APP_PACKAGE_PREFIX }}"
 
       - uses: actions/checkout@v4
       - name: Run test script
         run: |
           python3 tests/main.py | grep "Hello from"
 
+
   #---------------------------------------------------------------------------#
+  # Publish
 
-
-  publishPypiCheck:
-    name: Prep to publish to PyPI
-
+  versionCheck_Pypi:
+    name: Version check at PyPI
     needs:
-      - pre
+      - envPrep
       - localTest
     if: startsWith(github.ref, 'refs/tags/v')  # only publish to PyPI on tag pushes
     runs-on: ubuntu-latest
     env:
-      APP_PACKAGE_PREFIX: ${{ needs.pre.outputs.APP_PACKAGE_PREFIX }}
+      APP_PACKAGE_PREFIX: ${{ needs.envPrep.outputs.APP_PACKAGE_PREFIX }}
 
     steps:
       - uses: actions/checkout@v4
@@ -171,24 +171,26 @@ jobs:
           name: python-package-distributions
           path: dist/
       - name: Version check
-        id: version_check
+        id: check
         uses: ./.github/actions/publish-pypi-version-check
+        with:
+          repository-url: ${{ env.REPO_URL }}/simple
 
     outputs:
-      APP_PACKAGE_EXISTS: ${{ steps.version_check.outputs.exists }}
-
-
-  publishPypi:
+      exists: ${{ steps.check.outputs.exists }}
+  
+  
+  publish_Pypi:
     name: Publish to PyPI
-
     needs:
-      - publishPypiCheck
-    if: needs.publishPypiCheck.outputs.APP_PACKAGE_EXISTS == 'false'  # only publish to PyPI if the package version does not exist
+      - envPrep
+      - versionCheck_Pypi
+    if: needs.versionCheck_Pypi.outputs.exists == 'false'
     runs-on: ubuntu-latest
 
     environment:
       name: pypi
-      url: ${{ env.REPO_URL }}/p/${{ github.event.repository.name }}
+      url: ${{ env.REPO_URL }}/p/${{ env.APP_PACKAGE_NAME }}
 
     permissions:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
@@ -203,11 +205,33 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
 
 
+  integrationTest_Pypi:
+    name: Integration test from PyPI
+    needs:
+      - envPrep
+      - publish_Pypi
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install distribution from repo
+        run: |
+          pip install -i ${{ env.REPO_URL }}/simple ${{ env.APP_PACKAGE_NAME }}
+          pip list | grep "${{ needs.envPrep.outputs.APP_PACKAGE_PREFIX }}"
+
+      - uses: actions/checkout@v4
+      - name: Run test script
+        run: |
+          python3 tests/main.py | grep "Hello from"
+
+
+  #---------------------------------------------------------------------------#
+  # Release
+
   github-release:
     name: Upload to GitHub Release
 
     needs:
-      - publishPypi
+      - integrationTest_Pypi
     runs-on: ubuntu-latest
 
     permissions:
