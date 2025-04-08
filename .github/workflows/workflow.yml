@@ -86,14 +86,8 @@ jobs:
     env:
       APP_PACKAGE_PREFIX: ${{ needs.pre.outputs.APP_PACKAGE_PREFIX }}
 
-    environment:
-      name: testpypi
-      url: ${{ env.TEST_REPO_URL }}/p/${{ env.APP_PACKAGE_NAME }}
-
-    permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
-
     steps:
+      - uses: actions/checkout@v4
       - name: Download all the dists
         uses: actions/download-artifact@v4
         with:
@@ -116,8 +110,6 @@ jobs:
       - versionCheckTestpypi
     if: needs.versionCheckTestpypi.outputs.exists == 'false'
     runs-on: ubuntu-latest
-    env:
-      APP_PACKAGE_PREFIX: ${{ needs.pre.outputs.APP_PACKAGE_PREFIX }}
 
     environment:
       name: testpypi
