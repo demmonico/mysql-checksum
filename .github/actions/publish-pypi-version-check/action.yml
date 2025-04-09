@@ -25,8 +25,13 @@ runs:
         fi
         
         echo "pip index $url_param versions ${{ env.APP_PACKAGE_NAME }}"
+        pip index $url_param versions ${{ env.APP_PACKAGE_NAME }}
+        
         echo "pip index $url_param versions ${{ env.APP_PACKAGE_NAME }} | grep Available"
+        pip index $url_param versions ${{ env.APP_PACKAGE_NAME }} | grep Available
+        
         echo "pip index $url_param versions ${{ env.APP_PACKAGE_NAME }} | grep Available | grep --color=always \"$package_version\""
+        pip index $url_param versions ${{ env.APP_PACKAGE_NAME }} | grep Available | grep --color=always "$package_version"
         
         versions=$(pip index $url_param versions ${{ env.APP_PACKAGE_NAME }} | grep Available)
         echo -e "Versions available in repo: \n$( echo "$versions" | grep --color=always "$package_version" )"
