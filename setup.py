@@ -6,7 +6,7 @@ with open('README.md', 'r') as f:
 setup(
     name='mysql_checksum',
     author='demmonico',
-    version='0.9.5',
+    version='0.9.6',
     long_description=description,
     long_description_content_type='text/markdown',
 
