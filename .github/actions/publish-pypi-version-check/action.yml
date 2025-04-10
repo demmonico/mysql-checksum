@@ -23,23 +23,14 @@ runs:
         if [ "${{ inputs.repository-url }}" != "" ]; then
           url_param=" --index-url ${{ inputs.repository-url }}"
         fi
-        
-        echo "pip index $url_param versions ${{ env.APP_PACKAGE_NAME }}"
-        pip index $url_param versions ${{ env.APP_PACKAGE_NAME }}
-        
-        echo "pip index $url_param versions ${{ env.APP_PACKAGE_NAME }} | grep Available"
-        pip index $url_param versions ${{ env.APP_PACKAGE_NAME }} | grep Available
-        
-        echo "pip index $url_param versions ${{ env.APP_PACKAGE_NAME }} | grep Available | grep --color=always \"$package_version\" || echo \"Not found\""
-        pip index $url_param versions ${{ env.APP_PACKAGE_NAME }} | grep Available | grep --color=always "$package_version" || echo "Not found"
-        
+                
         versions=$(pip index $url_param versions ${{ env.APP_PACKAGE_NAME }} | grep Available)
-        echo -e "Versions available in repo: \n$( echo "$versions" | grep --color=always "$package_version" || echo \"Not found\" )"
-
         exists="$(echo "$versions" | grep "$package_version" > /dev/null 2>&1 && echo 'true' || echo 'false' )"
         if [ "$exists" == "true" ]; then
+          echo -e "Versions available in repo: \n$( echo "$versions" | grep --color=always "$package_version" )"
           echo "Package version $package_version already exists in repo, thus the publish step will be skipped"
         else
+          echo -e "Versions available in repo: \n$( echo "$versions" )"
           echo "Package version $package_version does not exist in repo"
         fi
         echo "exists=$(echo "$exists")" >> $GITHUB_OUTPUT
