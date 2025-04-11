@@ -20,17 +20,19 @@ runs:
         package_version=$( find ./dist -type f -name '*.whl' | sed -E "s/^.*${{ env.APP_PACKAGE_PREFIX }}-([0-9.]+)-py3.*\$/\1/g")
 
         url_param=""
+        repository_hint="(Pypi default repository)"
         if [ "${{ inputs.repository-url }}" != "" ]; then
           url_param=" --index-url ${{ inputs.repository-url }}"
+          repository_hint="(Pypi ${{ inputs.repository-url }} repository)"
         fi
                 
         versions=$(pip index $url_param versions ${{ env.APP_PACKAGE_NAME }} | grep Available)
         exists="$(echo "$versions" | grep "$package_version" > /dev/null 2>&1 && echo 'true' || echo 'false' )"
         if [ "$exists" == "true" ]; then
           echo -e "Versions available in repo: \n$( echo "$versions" | grep --color=always "$package_version" )"
-          echo "Package version $package_version already exists in repo, thus the publish step will be skipped"
+          echo "Package version $package_version already exists in repo $repository_hint, thus the publish step will be skipped"
         else
           echo -e "Versions available in repo: \n$( echo "$versions" )"
-          echo "Package version $package_version does not exist in repo"
+          echo "Package version $package_version does not exist in repo $repository_hint"
         fi
         echo "exists=$(echo "$exists")" >> $GITHUB_OUTPUT
