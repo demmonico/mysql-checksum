@@ -84,7 +84,7 @@ jobs:
     needs:
       - envPrep
       - localTest
-#    if: !startsWith(github.ref, 'refs/tags/v')  # NOT publish to TestPyPI on tag pushes
+    if: !startsWith(github.ref, 'refs/tags/v')  # NOT publish to TestPyPI on tag pushes
     runs-on: ubuntu-latest
     env:
       APP_PACKAGE_PREFIX: ${{ needs.envPrep.outputs.APP_PACKAGE_PREFIX }}
