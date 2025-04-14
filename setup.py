@@ -3,6 +3,9 @@ from setuptools import setup, find_packages
 with open('README.md', 'r') as f:
     description = f.read()
 
+with open('requirements.txt') as f:
+    required = f.read().splitlines()
+
 setup(
     name='mysql_checksum',
     author='demmonico',
@@ -12,12 +15,11 @@ setup(
 
     packages=find_packages(),
 
-    install_requires=[
-    ],
+    install_requires=required,
 
     entry_points={
         'console_scripts': [
-            'mysql-checksum = mysql_checksum:hello',
+            'mysql-checksum = mysql_checksum:main',
         ],
     },
 )
